@@ -1,0 +1,84 @@
+1，正则表达式
+2，sed 命令，
+	nl /etc/passwd |sed '2,4d'
+	nl /etc/passwd |sed '2a these words will be appended to the 2nd line'
+	sed 's/要被取代字符串/新的字符串/g'
+	sed 's/#.*$//g' -- 把＃开始的行替换成空行
+	sed 's/^$/d' --把空行删除
+	如果有个文件非常大，而我们知道在哪一行需要修改，可以不用vi,而直接使用sed -i选项修改源文件。
+3，awk，以行的形式把数据分成若干的字段。awk '条件1{动作1}，条件2{动作2}'
+4，比对命令diff（以行为比较单位） 和 cmp（以字节为比较单位，用的没有diff广泛），还有一个版本更新或者回退的patch命令，了解下，一般现在用beyondcompare来搞
+5，shell script
+	#!/bin/bash -- 声明使用bash执行该script
+	PATH=$PATH -- 设定环境变量信息
+	echo hello world -- 执行的部分
+	exit NUM -- 该返回值可以在script执行完之后用 echo $?查看。
+5，有效用户群组：
+	/etc/passwd /etc/shadow  /etc/group  /etc/gshadow 中的各字段的定义
+	通过groups 命令可以查看用户所在的群组，结果中最前边的是有效用户群组(effective group))
+	通过newgrp GROUPNAME 可以改变有效用户群组，群组的概念对于现有的文件指的是 用户拥有各组共同的权限，如果新建一个文件，则用的是有效群组
+	--这里需要注意的是newgrp命令之后会启动另外一个shell，如果需要退出返回请exit
+	添加用户：useradd
+	添加群组：groupadd
+	使用户新增群组 usermod -G GROUPNAME USERNAME
+	修改密码：passwd
+	root用户修改密码 passwd USERNAME
+	切换命令 su USERNAME
+	删除用户userdel 
+	远程拷贝命令：scp root@9.91.43.49:/home/huxj/git/paas-om/om_api_server/bin/om_work_server.tar.gz .
+	
+	curl http://127.0.0.1:8095/v2/components
+	curl http://127.0.0.1:8095/v2/component/metric/instance/1
+	
+	http://3ms.huawei.com/hi/group/1503825/blog_1969605.html?mapId=3082597&for_statistic_from=my_group_blog 【中软PaaS】一则小故事告诉你PaaS是什么？
+
+	ps aux|grep XXX|grep -v grep|awk ‘{print $2}’|xargs kill -9 -- kill所有XXX的进程
+
+	
+	
+1，mysql的字符集，_ci _cs _bin分别代表不区分大小写，区分大小写，二进制的字符集；4种方式改字符集的设置
+	a：修改.ini配置文件
+	b: set character_set_client = utf8等命令行的格式修改临时会话的字符集
+	c: set names gbk 可以临时一次性指定 character_set_client character_set_connection character_set_result 的值
+	d：连接时指定 --default-character-set=utf8_gernerate_ci
+2,数据库的管理：
+	1，数据库的创建 create database dbName
+	2，选择当前数据库  use dbName
+	3，显示数据库的结构 show create database dbName
+	4，删除数据库 drop database dbName
+3，表是数据库中最为重要的对象
+	1，MYISAM 和 InnoDB存储引擎
+	MySQL提供了插件式的存储引擎，它是基于表的，同一个数据库不同的表，存储引擎可以不同，甚至同一个表在不同的时间或场景也可以不同引擎
+		1，InnoDB存储引擎的特点：支持外键，支持事务，新版本支持全文检索，如果需要进行大量的增删改等操作，出于事务安全考虑，建议用它
+		2，MYISAM存储引擎的特点：具有检查和修复表的大部分工具，可以被压缩，但不支持事务，不支持外键，如果需要进行大量的select操作，出于效率的考虑，是更好的选择
+		3，show engins可以查看当前的引擎, 设置表的引擎命令为：alter table tb_name engine = MYISAM
+	2，设置默认的存储引擎 set default_storage_engine=MYISAM
+	3，创建数据库表
+		use mydb;
+		set default_storage_engine=InnoDB;
+		create table my_table(
+			today datetime,
+			name char(20)
+		);
+	4，显示表结构 desc my_table可查看表结构，show create table my_table可以查看my_table的建表语句
+	5，表记录的管理 insert into my_table values(now(),'hxjiang')
+	6，InnoDB表空间
+	7，删除表 drop table my_table
+	8，MySQL中变量分为@@开头的系统变量和以@开头的用户变量
+		show session variables
+		show global variables [like ...]
+	
+	9，MySQL数据库备份和修复
+		1，准备工作：停止MySQL服务 或者  flush table with read lock（把内存中的数据刷至文件，并加锁）
+		2，备份文件的选取，
+			如果数据库中全部是MYISAM类型的表，直接备份整个目录。
+			如果还存在InnoDB类型的，还需要ibdata1表空间文件和重做日志文件ib_logfile0和ib_logfile1,同时建议配置文件my.ini一并进行备份
+		3，数据库的恢复，先停止服务，然后将备份的文件放到对应的目录即可恢复
+		
+1，导出mysql的数据表命令行执行sudo mysqldump -uallpaasadmin -p'C1oudc0w!all' -h80.44.64.85 -P5306 --routines --default-character-set=utf8 --tables oms comp_metr_meta > db.table.sql
+	数据保存在/var/paas/chroot/mysql/var/vcap/store/mysql/oms
+2，恢复某个库的数据(oms库的comp_metr_meta表)
+	第一种方法: mysql -uallpaasadmin -p'C1oudc0w!all' -h80.44.64.85 -P5306 --default-character-set=utf8 oms < db.table.sql
+	第二种方法: 登录MySQL,执行source命令,后面的文件名要用绝对路径.
+	mysql> use mysql;
+	mysql> source /tmp/db.table.sql;
