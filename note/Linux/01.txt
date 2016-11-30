@@ -1,0 +1,29 @@
+:%s/\"max\"/\"avg\"/g --vi全局替换命令
+
+:set fileformat=unix --windows的文件保存成Unix格式
+
+linux 安装JDK的教程 http://czj4451.iteye.com/blog/2041159
+linux安装Redis的教程 ：http://czj4451.iteye.com/blog/2022995
+curl -sSL https://get.docker.com/ | sh --安装docker
+
+apt-get install libpcap-dev
+
+cat /etc/issue -- 查看ubuntu的版本，uname -r[-a]查看内核版本
+
+:noh --vi取消搜索高亮。
+
+du -h --max-depth=1 work/testing  /    --查看根目录的磁盘使用。
+
+top -> 1 -> xcb -> shift+<> 排序各个监控
+
+ggVG全选复制
+
+watch -n 1 "/sbin/ifconfig eth0 | grep bytes"
+
+sar -n DEV 1 -t
+
+
+netdate 10.10.10.1时间同步命令
+ros service stop ntp
+yum install ntp
+lsb_release -a --查看release版本
