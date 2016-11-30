@@ -1,0 +1,49 @@
+
+概念：
+镜像：分层的文件系统，是静态的
+容器：镜像运行起来的实例。动态的。
+
+
+常用命令
+docker pull name:tag 拉取镜像
+docker push name:tag 上传镜像
+docker commit CONTAINERID name:tag 将容器提交为镜像
+docker images 查看当前所有镜像
+doceker rmi IMAGEID 删除镜像
+docker save name:tag > IMG_FILE_NAME.tgz 将镜像保存成文件
+docker load < IMG_FILE_NAME.tgz 将文件重新导出成镜像
+
+docker ps 查看运行容器，-a可以查看所有的，包括已经停止的。
+docker rm CONTAINERID 删除容器，运行时的容器不可以被删除
+docker rm $(docker ps -aq)可以一键式删除所有停止的容器。
+docker run  -it IMGID /bin/bash 是常用的从镜像启动容器的方法，-i是交互，-t是获取终端，/bin/bash是容器那个后执行的进程。非必须
+docker attach CONTAINERID 重新附着运行在后台的容器。
+docker exec -it CONTAINERID /bin/bash 在后台容器中fork一个bash的进程。
+
+
+Dockerfile
+FROM 
+MAINTAINER
+ENV
+RUN
+ADD
+COPY
+CMD
+ENTRYPOINT
+EXPOSE
+VOLUME
+WORKDIR
+
+
+docker rmi -f `docker images |grep none | awk '{print $3}'`
+docker tag images_id name:tag --修改镜像名
+Dockerfile常用命令
+RUN:构建时需要执行的命令。
+CMD：容器运行时需要执行的命令
+docker run指定的命令会覆盖CMD的命令
+ENTRYPOINT：和CMD命令非常相似，不会被docker run 的命令覆盖，相应的docker run 的参数会被再次传入ENTRYPOINT
+如果CMD和ENTRYPOINT混用，则CMD对应的参数也会被传给ENTRYPOINT
+
+tailf /var/log/upstart/docker.log --docker进程的默认日志路径
+
+https://hub.docker.com/_/alpine/ --轻量级的内核镜像
