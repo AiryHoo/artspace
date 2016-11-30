@@ -1,0 +1,101 @@
+hbase(main):002:0> get 'tsdb-uid', "\x00\x19J"
+COLUMN CELL 
+name:tagv timestamp=1467252324994, value=metric_bridge_129.188.37.109_1053 
+1 row(s) in 0.0130 seconds
+
+
+hbase(main):003:0> scan 'tsdb-uid',{COLUMN => 'id'}
+
+
+hbase(main):022:0> get 'tsdb-uid', 'query_level'
+COLUMN CELL 
+id:tagk timestamp=1467251595749, value=\x00\x00\x02 
+1 row(s) in 0.0040 seconds
+
+
+hbase(main):001:0> scan 'tsdb-uid', {COLUMNS => 'name:metrics'}
+ROW COLUMN+CELL 
+\x00\x00\x01 column=name:metrics, timestamp=1464615069235, value=disk_total_k8s 
+\x00\x00\x02 column=name:metrics, timestamp=1464615069342, value=disk_usage_k8s 
+\x00\x00\x03 column=name:metrics, timestamp=1464615071583, value=metric_peak 
+\x00\x00\x04 column=name:metrics, timestamp=1464615071600, value=metric_total 
+\x00\x00\x05 column=name:metrics, timestamp=1464617135147, value=mem_total_k8s 
+\x00\x00\x06 column=name:metrics, timestamp=1464617135179, value=mem_usage_k8s 
+\x00\x00\x07 column=name:metrics, timestamp=1464617135185, value=cpu_total_k8s 
+\x00\x00\x08 column=name:metrics, timestamp=1464617135190, value=cpu_usage_k8s 
+\x00\x00\x09 column=name:metrics, timestamp=1464682023068, value=metric_latency 
+\x00\x00\x0A column=name:metrics, timestamp=1464682023069, value=metric_latency 
+10 row(s) in 3.0690 seconds
+
+
+
+
+hbase(main):021:0> disable_all 't.*'
+tsdb 
+tsdb-meta 
+tsdb-tree 
+tsdb-uid 
+
+Disable the above 4 tables (y/n)?
+
+hbase(main):022:0> drop_all 't.*'
+tsdb 
+tsdb-meta 
+tsdb-tree 
+tsdb-uid 
+
+Drop the above 4 tables (y/n)?
+李棘阳(l00352755) 2016-08-29 18:52
+/var/paas/jobs/opentsdb/tools/create_table.sh
+李棘阳(l00352755) 2016-08-29 18:52
+
+8台metric-server
+SPLITS => ['\x00\x00\x00\x02', '\x00\x00\x00\x03', '\x00\x00\x00\x04', '\x00\x00\x00\x05', '\x00\x00\x00\x06', '\x00\x00\x00\x07', '\x00\x00\x00\x08', '\x01\x00\x00\x01', '\x01\x00\x00\x02', '\x01\x00\x00\x03', '\x01\x00\x00\x04', '\x01\x00\x00\x05', '\x01\x00\x00\x06', '\x01\x00\x00\x07', '\x01\x00\x00\x08', '\x02\x00\x00\x01', '\x02\x00\x00\x02', '\x02\x00\x00\x03', '\x02\x00\x00\x04', '\x02\x00\x00\x05', '\x02\x00\x00\x06', '\x02\x00\x00\x07', '\x02\x00\x00\x08', '\x03\x00\x00\x01', '\x03\x00\x00\x02', '\x03\x00\x00\x03', '\x03\x00\x00\x04', '\x03\x00\x00\x05', '\x03\x00\x00\x06', '\x03\x00\x00\x07', '\x03\x00\x00\x08', '\x04\x00\x00\x01', '\x04\x00\x00\x02', '\x04\x00\x00\x03', '\x04\x00\x00\x04', '\x04\x00\x00\x05', '\x04\x00\x00\x06', '\x04\x00\x00\x07', '\x04\x00\x00\x08', '\x05\x00\x00\x01', '\x05\x00\x00\x02', '\x05\x00\x00\x03', '\x05\x00\x00\x04', '\x05\x00\x00\x05', '\x05\x00\x00\x06', '\x05\x00\x00\x07', '\x05\x00\x00\x08', '\x06\x00\x00\x01', '\x06\x00\x00\x02', '\x06\x00\x00\x03', '\x06\x00\x00\x04', '\x06\x00\x00\x05', '\x06\x00\x00\x06', '\x06\x00\x00\x07', '\x06\x00\x00\x08', '\x07\x00\x00\x01', '\x07\x00\x00\x02', '\x07\x00\x00\x03', '\x07\x00\x00\x04', '\x07\x00\x00\x05', '\x07\x00\x00\x06', '\x07\x00\x00\x07', '\x07\x00\x00\x08'] 
+
+
+/var/paas/jobs/hbase/bin/hbase shell
+
+scan 'tsdb-uid', {COLUMNS => 'name:metrics'}
+scan 'tsdb-uid', {COLUMNS => 'name:tagk'}
+scan 'tsdb-uid', {COLUMNS => 'name:tagv'}
+scan 'tsdb'
+hbase(main):001:0> list
+TABLE 
+tsdb 
+tsdb-meta 
+tsdb-tree
+tsdb-uid 
+4 row(s) in 0.1690 seconds
+
+=> ["tsdb", "tsdb-meta", "tsdb-tree", "tsdb-uid"]
+
+
+
+分配region 域的步骤
+1，停止所有的metric_bridge
+salt '*metric*' cmd.run '/var/paas/monit/bin/monit stop metric_bridge'
+2, 删除表格。
+hbase(main):021:0> disable_all 't.*'
+hbase(main):022:0> drop_all 't.*'
+3，新建表格
+修改create_table.sh，的CREATE_TSDB_TABLE中的参数
+env COMPRESSION=NONE HBASE_HOME=/var/paas/jobs/hbase /var/paas/jobs/opentsdb/tools/create_table.sh
+4，手动创建metric
+/var/paas/jobs/opentsdb/bin/tsdb mkmetric cpu_total_k8s cpu_usage_k8s mem_total_k8s mem_usage_k8s disk_total_k8s disk_usage_k8s metric_peak count latency avg_letency fail_count status_code --config=/var/paas/jobs/opentsdb/etc/opentsdb/opentsdb.conf
+/var/paas/jobs/opentsdb/bin/tsdb mkmetric cpu_total_k8s avg_latency --config=/var/paas/jobs/opentsdb/etc/opentsdb/opentsdb.conf
+4，重启1台opentsdb,metric_bridge
+接收数据
+5，查看uid分配是否正常
+hbase(main):001:0> scan 'tsdb-uid', {COLUMNS => 'name:metrics'}
+6，tsdb-uid 表正常后，需要重启所有 的 opentsdb，启动所有metric_bridge
+7，登入以下地址查看，region分配情况。
+http://129.188.37.170:60010/master-status
+
+create '$TREE_TABLE',
+{NAME => 't', VERSIONS => 1, COMPRESSION => '$COMPRESSION', BLOOMFILTER => '$BLOOMFILTER'}
+
+create '$META_TABLE',
+{NAME => 'name', COMPRESSION => '$COMPRESSION', BLOOMFILTER => '$BLOOMFILTER'}
+scan 'tsdb-uid', {COLUMNS => 'name:metrics'}
+scan 'tsdb-uid', {COLUMNS => 'name:tagk'}
+scan 'tsdb-uid', {COLUMNS => 'name:tagv'}
